@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # تم إضافة هذا المشغل للسماح بتشغيل عملية البناء يدوياً
+  workflow_dispatch: # يتيح لك تشغيل البناء يدوياً من موقع جيت هاب بأي وقت
 
 jobs:
   build:
@@ -20,12 +20,15 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle' # تم إضافة الكاش لتسريع بناء الأندرويد في المرات القادمة
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.11.0' # Matches local environment
+          # تم التحديث إلى إصدار مستقر يحل مشكلة الـ runner ويحافظ على توافقية بيئتك المحلية
+          flutter-version: '3.22.x' 
           channel: 'stable'
+          cache: true # كاش لحفظ ملفات فلاتر وتسريع الأكشن
 
       - name: Install dependencies
         run: flutter pub get
@@ -33,8 +36,11 @@ jobs:
       - name: Generate Drift database code
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
+      # طريقة احترافية ومؤمنة لفك تشفير الـ Keystore والتأكد من مسار المجلد
       - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
 
       - name: Build APK
         run: flutter build apk --release
