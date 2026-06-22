@@ -6,6 +6,9 @@ import 'notification_service.dart';
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
+    // Initialize notification service for this isolate
+    await NotificationService.init();
+
     final database = AppDatabase();
     final repository = MaintenanceRepositoryImpl(database);
     final records = await repository.getAllRecords();
