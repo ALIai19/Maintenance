@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+  workflow_dispatch: # 🚀 هذا السطر يفعل ميزة تشغيل البناء يدوياً من جيت هاب
 
 jobs:
   build:
@@ -19,12 +20,14 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle' # كاش لتسريع بناء الأندرويد
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
+          cache: true # كاش لحفظ ملفات فلاتر وتسريع الأكشن
 
       - name: Install dependencies
         run: flutter pub get
@@ -33,7 +36,9 @@ jobs:
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
       - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
 
       - name: Build APK
         run: flutter build apk --release
